@@ -6,7 +6,8 @@ The test project for job apply.
 - [Room](https://developer.android.com/training/data-storage/room) for database
 - [Koin](https://github.com/InsertKoinIO/koin) for DI
 - [Moshi](https://github.com/square/moshi) for parsing json
-Platform: Kotlin 1.9.10 and Android Studio Giraffe | 2022.3.1 Patch 2
+
+- Platform: Kotlin 1.9.10 and Android Studio Giraffe | 2022.3.1 Patch 2
 
 ## Comments
 Let's talk about `Develop an ingestion process, filling the local data base from the dataset.`. At the beginning I had two ideas in my head. 
