@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,7 +17,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,55 +28,53 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import workshop.akbolatss.dictionartyapp.data.model.WordWithDefinitions
 import workshop.akbolatss.dictionartyapp.ui.theme.DictionartyAppTheme
 
-private const val LOADING_DELAY = 1500L
 
 @Composable
-fun DictionartyApp(
+fun WordsListScreen(
     uiState: DictionartyScreenState,
-    onSubmitQuery: (String) -> Unit = {},
+    onSubmitQuery: (String) -> Unit = {}
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colors.background
-    ) {
-        var isLoading by remember { mutableStateOf(true) }
+    var isSearchActive by remember { mutableStateOf(false) }
 
-        AnimatedVisibility(
-            visible = uiState.itemCount != 0 && !isLoading,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Column {
-                SearchBar(onSubmitQuery)
-                AnimatedVisibility(visible = uiState.isQueryEmpty == false) {
-                    Content(
-                        uiState.queryResult,
-                    )
+    Scaffold(
+        topBar = {
+            SearchBarWidget(
+                isSearchActive,
+                onSearchStateChanged = {
+                    isSearchActive = it
+                },
+                onSubmitQuery
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    isSearchActive = true
                 }
-
-                if (uiState.isQueryEmpty == true) {
-                    NotFoundScreen()
-                }
+            ) {
+                Icon(Icons.Outlined.Search, null)
             }
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            AnimatedVisibility(visible = !uiState.isEmpty()) {
+                WordListWidget(uiState.queryResult)
+            }
 
-        if (uiState.itemCount == 0 || isLoading) {
-            WelcomeScreen()
-        }
-
-        LaunchedEffect(key1 = isLoading) {
-            delay(LOADING_DELAY)
-            isLoading = false
+            if (uiState.isEmpty()) {
+                EmptyDataWidget(uiState.isQueryResult)
+            }
         }
     }
 }
 
 @Composable
-private fun WelcomeScreen() {
+fun WelcomeScreen(errorMessage: String?) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,7 +90,7 @@ private fun WelcomeScreen() {
             )
 
             Text(
-                text = "Preparing DB. Please wait",
+                text = errorMessage ?: "Preparing DB. Please wait",
                 modifier = Modifier,
                 textAlign = TextAlign.Center,
             )
@@ -99,7 +99,7 @@ private fun WelcomeScreen() {
 }
 
 @Composable
-private fun NotFoundScreen() {
+private fun EmptyDataWidget(isQueryResult: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -109,17 +109,26 @@ private fun NotFoundScreen() {
                 .align(Alignment.Center)
         ) {
 
+            val vector =
+                if (isQueryResult) Icons.Outlined.Info
+                else Icons.Outlined.Search
             Icon(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .size(40.dp),
-                imageVector = Icons.Outlined.Info,
+                imageVector = vector,
                 contentDescription = null
             )
 
+            val text =
+                if (isQueryResult) "Nothing found. Type a new word"
+                else "Click FAB to learn new about words"
             Text(
-                text = "Nothing found. Type a new word",
-                modifier = Modifier,
+                text = text,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 8.dp),
                 textAlign = TextAlign.Center,
             )
         }
@@ -127,7 +136,7 @@ private fun NotFoundScreen() {
 }
 
 @Composable
-private fun Content(
+private fun WordListWidget(
     wordsWithDefinitions: List<WordWithDefinitions>
 ) {
     LazyColumn(
@@ -138,16 +147,19 @@ private fun Content(
         )
     ) {
         items(wordsWithDefinitions) {
-            WordCard(it)
+            WordItemWidget(it)
         }
     }
 }
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun ColumnScope.SearchBar(onSubmitQuery: (String) -> Unit) {
+@Composable
+private fun SearchBarWidget(
+    isActive: Boolean,
+    onSearchStateChanged: (Boolean) -> Unit = {},
+    onSubmitQuery: (String) -> Unit = {}
+) {
     var queryString by remember { mutableStateOf("") }
-    var isActive by remember { mutableStateOf(false) }
 
     SearchBar(
         modifier = Modifier
@@ -159,13 +171,13 @@ private fun ColumnScope.SearchBar(onSubmitQuery: (String) -> Unit) {
             queryString = newQueryString
         },
         onSearch = {
-            isActive = false
+            onSearchStateChanged(false)
             onSubmitQuery(it)
             queryString = ""
         },
         active = isActive,
         onActiveChange = { activeChange ->
-            isActive = activeChange
+            onSearchStateChanged(activeChange)
         },
         placeholder = {
             Text(text = "Type a word")
@@ -182,9 +194,7 @@ private fun ColumnScope.SearchBar(onSubmitQuery: (String) -> Unit) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = null)
             }
         }
-    ) {
-        // TODO suggestions using QUERY LIKE, I guess
-    }
+    ) {}
 }
 
 @Preview(showBackground = true)
@@ -193,7 +203,7 @@ fun DefaultPreview() {
     DictionartyAppTheme {
         DictionartyApp(
             uiState = DictionartyScreenState(
-                itemCount = 0
+                isReady = false
             )
         )
     }

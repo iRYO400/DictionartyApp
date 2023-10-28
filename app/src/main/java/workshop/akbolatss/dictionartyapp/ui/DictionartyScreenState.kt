@@ -3,13 +3,14 @@ package workshop.akbolatss.dictionartyapp.ui
 import workshop.akbolatss.dictionartyapp.data.model.WordWithDefinitions
 
 data class DictionartyScreenState(
-    val itemCount: Int = 0,
+    val isReady: Boolean = false,
     val queryResult: List<WordWithDefinitions> = emptyList(),
-    val isQueryEmpty: Boolean? = null,
-    val errorMessage: String? = null,
-    val databaseCorrupted: Boolean? = null
+    val isQueryResult: Boolean = false,
+    val errorMessage: String? = null
 ) {
     companion object {
         fun default() = DictionartyScreenState()
     }
+
+    fun isEmpty() = queryResult.isEmpty()
 }

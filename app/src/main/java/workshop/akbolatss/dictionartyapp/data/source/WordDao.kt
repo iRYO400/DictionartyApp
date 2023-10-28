@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import kotlinx.coroutines.flow.Flow
 import workshop.akbolatss.dictionartyapp.data.model.DefinitionEntity
 import workshop.akbolatss.dictionartyapp.data.model.WordEntity
 import workshop.akbolatss.dictionartyapp.data.model.WordWithDefinitions
@@ -28,7 +27,7 @@ interface WordDao {
     suspend fun insertDefinition(definitions: List<DefinitionEntity>)
 
     @Query("SELECT COUNT(wordId) FROM word")
-    fun getWordsCount(): Flow<Int>
+    suspend fun wordsCount(): Int
 
     @Transaction
     @Query("SELECT * FROM Word WHERE word = :query COLLATE NOCASE")

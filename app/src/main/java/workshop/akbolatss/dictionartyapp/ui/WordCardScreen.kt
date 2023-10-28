@@ -28,7 +28,7 @@ import workshop.akbolatss.dictionartyapp.data.model.WordWithDefinitions
 import workshop.akbolatss.dictionartyapp.ui.theme.DictionartyAppTheme
 
 @Composable
-fun WordCard(
+fun WordItemWidget(
     wordWithDefinitions: WordWithDefinitions
 ) {
     OutlinedCard(
@@ -44,15 +44,15 @@ fun WordCard(
             modifier = Modifier
                 .padding(16.dp)
         ) {
-            WordWithPos(wordWithDefinitions)
-            Definitions(wordWithDefinitions)
+            WordWithPosText(wordWithDefinitions)
+            DefinitionsText(wordWithDefinitions)
             Synonyms(wordWithDefinitions)
         }
     }
 }
 
 @Composable
-private fun WordWithPos(wordWithDefinitions: WordWithDefinitions) {
+private fun WordWithPosText(wordWithDefinitions: WordWithDefinitions) {
     val wordWithPosText = buildAnnotatedString {
         withStyle(
             style = LocalTextStyle.current.copy(
@@ -82,7 +82,7 @@ private fun WordWithPos(wordWithDefinitions: WordWithDefinitions) {
 }
 
 @Composable
-private fun Definitions(wordWithDefinitions: WordWithDefinitions) {
+private fun DefinitionsText(wordWithDefinitions: WordWithDefinitions) {
     wordWithDefinitions.definitions.forEachIndexed { index, definitionEntity ->
         val definitionText = buildAnnotatedString {
             withStyle(
@@ -137,7 +137,7 @@ private fun Synonyms(wordWithDefinitions: WordWithDefinitions) {
 @Composable
 fun WordCardPreview() {
     DictionartyAppTheme {
-        WordCard(
+        WordItemWidget(
             wordWithDefinitions = WordWithDefinitions(
                 word = WordEntity(
                     wordId = 0,

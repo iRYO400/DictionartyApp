@@ -6,10 +6,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import workshop.akbolatss.dictionartyapp.data.DictionartyRepository
+import workshop.akbolatss.dictionartyapp.domain.InstantiateDatabaseUseCase
+import workshop.akbolatss.dictionartyapp.domain.QueryWordUseCase
 
 class DictionartyViewModel(
-    private val repository: DictionartyRepository
+    private val instantiateDatabaseUseCase: InstantiateDatabaseUseCase,
+    private val queryWordUseCase: QueryWordUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DictionartyScreenState.default())
@@ -17,30 +19,27 @@ class DictionartyViewModel(
 
     init {
         viewModelScope.launch {
-            try {
-                repository.initDatabase()
-            } catch (e: RuntimeException) {
-                _uiState.update {
-                    it.copy(databaseCorrupted = true) //TODO need to handle this state
+            instantiateDatabaseUseCase.invoke()
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(isReady = true)
+                    }
                 }
-            }
-        }
-        viewModelScope.launch {
-            repository.currentCount().collect { itemCount ->
-                _uiState.update {
-                    it.copy(itemCount = itemCount)
+                .onFailure {
+                    _uiState.update {
+                        it.copy(errorMessage = "Database corrupted, please reinstall app")
+                    }
                 }
-            }
         }
     }
 
     fun onSubmitQuery(query: String) {
         viewModelScope.launch {
-            val result = repository.query(query)
+            val result = queryWordUseCase.invoke(query)
             _uiState.update {
                 it.copy(
                     queryResult = result,
-                    isQueryEmpty = result.isEmpty()
+                    isQueryResult = true
                 )
             }
         }
